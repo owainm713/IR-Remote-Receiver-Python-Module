@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""IRModule, module to use with IR sensor
+"""IRModuleV2, module to use with IR sensor
 
 created Apr 27, 2018 
-modified - Apr 30, 2018 """
+modified - Apr 30, 2018
+modified Apr 1, 2020 - added repeat code functionality"""
 
 """
-Copyright 2018 Owain Martin
+Copyright 2018, 2019, 2020 Owain Martin
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,6 +38,9 @@ class IRRemote:
             self.callback = callback
         self.checkTime = 150  # time in milliseconds
         self.verbose = False
+        self.repeatCodeOn = True
+        self.lastIRCode = 0
+        self.maxPulseListLength = 70
 
     def pWidth(self, pin):
         """pWidth, function to record the width of the highs and lows
@@ -56,16 +60,41 @@ class IRRemote:
     def pulse_checker(self):
         """pulse_checker, function to look for the end of the IR remote
         signal and activate the signal decode function followed by
-        the callback function."""
+        the callback function.
 
-        while True:
-                check = (time.time()-self.timer)*1000
+        End of signal is determined by 1 of 2 ways
+        1 - if the length of the pulse list is larger than self.maxPulseListLength
+          - used for initial button press codes
+        2 - if the length of time receiving the pulse is great than self.checkTime
+          - used for repeat codes"""
+
+        timer = time.time()
+
+        while True:                
+                check = (time.time()-timer)*1000
                 if check > self.checkTime:                    
-                    #print(check)
+                    print(check, len(self.pList))
                     break
-                time.sleep(0.01)        
+                if len(self.pList) > self.maxPulseListLength:
+                    print(check, len(self.pList))
+                    break
+                time.sleep(0.001)
 
-        decode = self.decode_pulse(self.pList)           
+        if len(self.pList) > self.maxPulseListLength:
+            decode = self.decode_pulse(self.pList)
+            self.lastIRCode = decode
+
+        # if the length of self.pList is less than 10
+        # assume repeat code found
+        elif len(self.pList) < 10:
+            if self.repeatCodeOn == True:
+                decode = self.lastIRCode
+            else:
+                decode = 0
+                self.lastIRCode = decode
+        else:
+            decode = 0
+            self.lastIRCode = decode
 
         self.pList = []
         self.decoding = False
@@ -178,6 +207,14 @@ class IRRemote:
 
         return
 
+    def set_repeat(self, repeat = True):
+        """set_repeat, function to enable and disable
+        the IR repeat code functionality"""
+
+        self.repeatCodeOn = repeat
+
+        return
+
 
 if __name__ == "__main__":
 
@@ -185,6 +222,8 @@ if __name__ == "__main__":
 
         # Codes listed below are for the
         # Sparkfun 9 button remote
+
+        #print(hex(code))
 
         if code == 0x10EFD827:
             print("Power")
@@ -223,6 +262,7 @@ if __name__ == "__main__":
     print('Setting up callback')
     ir.set_verbose(False)
     ir.set_callback(remote_callback)
+    ir.set_repeat(True)
 
     try:
 

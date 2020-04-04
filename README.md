@@ -33,7 +33,11 @@ Current user functions include:
 - set_callback(callback = yourfunctname)
 - remove_callback()
 - set_verbose(verbose = False)
+- set_repeat(repeat = True)
 
 
+Apr 3, 2020 Update
+- added repeat code recognition functionality
+- added the set_repeat() function to enable/disable the repeat code functionality
 
-Updated Apr 30, 2018
+
