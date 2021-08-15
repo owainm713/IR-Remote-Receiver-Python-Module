@@ -31,7 +31,7 @@ class IRRemote:
 
         self.decoding = False
         self.pList = []
-        self.timer = time.time()
+        self.timer = time.time_ns()
         if callback == 'DECODE':
             self.callback = self.print_ir_code
         else:
@@ -47,8 +47,8 @@ class IRRemote:
         of the IR remote signal and start the function to look for the
         end of the IR remote signal"""
 
-        self.pList.append(time.time()-self.timer)
-        self.timer = time.time()        
+        self.pList.append((time.time_ns()-self.timer)/1000000000.)
+        self.timer = time.time_ns()        
 
         if self.decoding == False:
             self.decoding = True
@@ -68,10 +68,10 @@ class IRRemote:
         2 - if the length of time receiving the pulse is great than self.checkTime
           - used for repeat codes"""
 
-        timer = time.time()
+        timer = time.time_ns()
 
         while True:                
-                check = (time.time()-timer)*1000
+                check = (time.time_ns()-timer)/1000000
                 if check > self.checkTime:                    
                     print(check, len(self.pList))
                     break
@@ -117,7 +117,7 @@ class IRRemote:
         
         for p in range(0,len(pList)):
             try:
-                pList[p]=float(pList[p])*1000
+                pList[p]=pList[p]*1000.
                 if self.verbose == True:
                     print(pList[p])
                 if pList[p]<11:
